@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Tracker</title>
+    <title>EC/CC Tracker</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter font from Google Fonts -->
@@ -71,6 +71,18 @@
         .btn-download:hover {
             background-color: #0284c7; /* Sky 600 */
         }
+        .btn-gemini { /* New style for Gemini-powered buttons */
+            background-color: #8b5cf6; /* Violet 500 */
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease-in-out;
+            margin-left: 0.25rem;
+            margin-top: 0.25rem; /* Added for better spacing in action column */
+        }
+        .btn-gemini:hover {
+            background-color: #7c3aed; /* Violet 600 */
+        }
         .input-field, .select-field {
             padding: 0.75rem;
             border: 1px solid #d1d5db; /* Gray 300 */
@@ -122,20 +134,91 @@
         .status-postponed {
             background-color: #ef4444; /* Red 500 */
         }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 90%;
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #4f46e5;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .initial-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            font-size: 1.2rem;
+            color: #4b5563;
+        }
     </style>
 </head>
 <body class="p-4">
+    <!-- Initial Loading Overlay -->
+    <div id="initialLoadingOverlay" class="initial-loading-overlay">
+        <div class="loading-spinner"></div>
+        <p class="mt-4">Loading tracker data...</p>
+    </div>
+
     <div class="container">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Personal Tracker</h1>
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">EC/CC Tracker</h1>
+        <p id="userIdDisplay" class="text-sm text-gray-600 text-center mb-4">User ID: Loading...</p>
 
         <!-- Input Form -->
         <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
             <h2 class="text-xl font-semibold text-gray-700 mb-4">Add New Item</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label for="itemName" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                    <input type="text" id="itemName" class="input-field focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Job Application">
-                </div>
                 <div>
                     <label for="appNumber" class="block text-sm font-medium text-gray-700 mb-1">Application Number</label>
                     <input type="text" id="appNumber" class="input-field focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., APP12345">
@@ -145,11 +228,25 @@
                     <input type="text" id="itemValue" class="input-field focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Interview Scheduled">
                 </div>
                 <div>
+                    <label for="sroInput" class="block text-sm font-medium text-gray-700 mb-1">SRO</label>
+                    <input type="text" id="sroInput" class="input-field focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., SRO-XYZ">
+                </div>
+                <div>
                     <label for="itemStatus" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select id="itemStatus" class="select-field focus:ring-indigo-500 focus:border-indigo-500">
                         <option value="progress">Progress</option>
                         <option value="complete">Complete</option>
                         <option value="postponed">Postponed</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="itemAssignee" class="block text-sm font-medium text-gray-700 mb-1">Assignee</label>
+                    <select id="itemAssignee" class="select-field focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">-- Select Assignee --</option>
+                        <option value="AJITHKUMAR">AJITHKUMAR</option>
+                        <option value="ALAGES">ALAGES</option>
+                        <option value="CHITRA">CHITRA</option>
+                        <option value="SURYA">SURYA</option>
                     </select>
                 </div>
                 <div>
@@ -168,10 +265,11 @@
                 <table id="trackedItemsTable" class="min-w-full divide-y divide-gray-200 shadow-sm rounded-lg">
                     <thead>
                         <tr>
-                            <th>Item Name</th>
                             <th>App. No.</th>
                             <th>Value/Desc.</th>
+                            <th>SRO</th>
                             <th>Status</th>
+                            <th>Assignee</th>
                             <th>Amount (INR)</th>
                             <th>Tracked On</th>
                             <th>Actions</th>
@@ -190,12 +288,77 @@
         </div>
     </div>
 
-    <script>
-        // Get references to DOM elements
-        const itemNameInput = document.getElementById('itemName');
+    <!-- Modal for LLM output -->
+    <div id="llmOutputModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button" id="closeModalBtn">&times;</span>
+            <h3 id="modalTitle" class="text-xl font-bold mb-4"></h3>
+            <div id="modalContent" class="text-gray-700 whitespace-pre-wrap"></div>
+            <div id="modalLoadingSpinner" class="loading-spinner hidden"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, query, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables for Firebase instances
+        let app;
+        let db;
+        let auth;
+        let currentUserId = null;
+        let isAuthReady = false; // Flag to ensure Firestore operations only run after auth is ready
+
+        // Constants for Firebase setup
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Initialize Firebase
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch (error) {
+            console.error("Error initializing Firebase:", error);
+            document.getElementById('initialLoadingOverlay').innerHTML = `<p class="text-red-500">Error initializing Firebase. Please check console for details.</p>`;
+            // Prevent further execution if Firebase fails to initialize
+            throw error;
+        }
+
+        // Authentication State Listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                document.getElementById('userIdDisplay').textContent = `User ID: ${currentUserId}`;
+                isAuthReady = true;
+                // Start listening to Firestore data only after authentication is ready
+                setupFirestoreListener();
+            } else {
+                // Sign in anonymously if no user is found or initial token is not provided
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                } catch (error) {
+                    console.error("Error during Firebase authentication:", error);
+                    document.getElementById('initialLoadingOverlay').innerHTML = `<p class="text-red-500">Error authenticating with Firebase. Please check console for details.</p>`;
+                }
+            }
+            // Hide loading overlay once authentication state is determined
+            document.getElementById('initialLoadingOverlay').classList.add('hidden');
+        });
+
+        // Get references to DOM elements (re-declared for module scope)
         const appNumberInput = document.getElementById('appNumber');
         const itemValueInput = document.getElementById('itemValue');
+        const sroInput = document.getElementById('sroInput');
         const itemStatusSelect = document.getElementById('itemStatus');
+        const itemAssigneeSelect = document.getElementById('itemAssignee');
         const itemAmountInput = document.getElementById('itemAmount');
         const addItemBtn = document.getElementById('addItemBtn');
         const trackedItemsList = document.getElementById('trackedItemsList'); // tbody of the table
@@ -204,15 +367,107 @@
         const totalAmountDisplay = document.getElementById('totalAmountDisplay');
         const downloadExcelBtn = document.getElementById('downloadExcelBtn');
 
-        let editingIndex = -1; // To keep track of which item is being edited
+        // Modal elements
+        const llmOutputModal = document.getElementById('llmOutputModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+        const modalLoadingSpinner = document.getElementById('modalLoadingSpinner');
 
-        // Function to load items from localStorage and display them in the table
-        function loadItems() {
-            const items = JSON.parse(localStorage.getItem('trackerItems')) || [];
+        let editingIndex = -1; // To keep track of which item is being edited
+        let trackerItemsData = []; // Store items fetched from Firestore
+
+        // Function to show the modal
+        function showModal(title, content) {
+            modalTitle.textContent = title;
+            modalContent.textContent = content; // Use textContent to prevent XSS
+            llmOutputModal.classList.remove('hidden');
+        }
+
+        // Function to hide the modal
+        function hideModal() {
+            llmOutputModal.classList.add('hidden');
+            modalTitle.textContent = '';
+            modalContent.textContent = '';
+            modalLoadingSpinner.classList.add('hidden'); // Hide spinner on close
+        }
+
+        // Event listener for closing the modal
+        closeModalBtn.addEventListener('click', hideModal);
+        llmOutputModal.addEventListener('click', (event) => {
+            if (event.target === llmOutputModal) {
+                hideModal(); // Close if clicked outside content
+            }
+        });
+
+        // Function to call the Gemini API
+        async function callGeminiAPI(prompt, title) {
+            showModal(title, 'Generating response...'); // Show modal with loading message
+            modalLoadingSpinner.classList.remove('hidden'); // Show spinner
+
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // Canvas will automatically provide this
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    modalContent.textContent = text; // Display the response
+                } else {
+                    modalContent.textContent = "Error: Could not get a valid response from the AI.";
+                    console.error("Gemini API response structure unexpected:", result);
+                }
+            } catch (error) {
+                modalContent.textContent = "Error: Failed to connect to the AI. Please try again.";
+                console.error("Error calling Gemini API:", error);
+            } finally {
+                modalLoadingSpinner.classList.add('hidden'); // Hide spinner
+            }
+        }
+
+        // Function to set up real-time Firestore listener
+        function setupFirestoreListener() {
+            if (!isAuthReady || !currentUserId) {
+                console.warn("Firestore listener not set up: Authentication not ready or userId is null.");
+                return;
+            }
+
+            const itemsCollectionRef = collection(db, `artifacts/${appId}/users/${currentUserId}/trackerItems`);
+            const q = query(itemsCollectionRef);
+
+            onSnapshot(q, (snapshot) => {
+                trackerItemsData = [];
+                snapshot.forEach((doc) => {
+                    trackerItemsData.push({ id: doc.id, ...doc.data() });
+                });
+                // Sort items by timestamp (most recent first)
+                trackerItemsData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                renderItems(); // Re-render the UI with new data
+            }, (error) => {
+                console.error("Error fetching Firestore data:", error);
+                document.getElementById('trackedItemsList').innerHTML = `<tr><td colspan="8" class="text-red-500 text-center py-4">Error loading data. Please try refreshing.</td></tr>`;
+                document.getElementById('initialLoadingOverlay').classList.add('hidden'); // Hide overlay even on error
+            });
+        }
+
+        // Function to render items to the table (now uses trackerItemsData)
+        function renderItems() {
             trackedItemsList.innerHTML = ''; // Clear current table body display
             let totalAmount = 0;
 
-            if (items.length === 0) {
+            if (trackerItemsData.length === 0) {
                 noItemsMessage.classList.remove('hidden'); // Show "No items" message
                 trackedItemsTableContainer.classList.add('hidden'); // Hide table if no items
                 downloadExcelBtn.classList.add('hidden'); // Hide download button if no items
@@ -221,12 +476,11 @@
                 trackedItemsTableContainer.classList.remove('hidden'); // Show table
                 downloadExcelBtn.classList.remove('hidden'); // Show download button
 
-                items.forEach((item, index) => {
+                trackerItemsData.forEach((item, index) => {
                     const row = document.createElement('tr');
-                    row.setAttribute('data-index', index); // Add data-index to the row
+                    row.setAttribute('data-id', item.id); // Use Firestore document ID for actions
 
                     let statusDisplayHtml = '';
-                    let statusText = item.status;
                     if (item.status === 'complete') {
                         statusDisplayHtml = `<span class="status-indicator status-complete"></span>Complete`;
                     } else if (item.status === 'progress') {
@@ -235,39 +489,56 @@
                         statusDisplayHtml = `<span class="status-indicator status-postponed"></span>Postponed`;
                     }
 
-
-                    if (editingIndex === index) {
+                    if (editingIndex === index) { // Use array index for local editing state
                         // Render in edit mode
                         row.innerHTML = `
-                            <td><span class="font-medium">${item.name}</span></td>
-                            <td><input type="text" class="editable-input" id="editAppNumber-${index}" value="${item.appNumber || ''}"></td>
+                            <td><input type="text" class="editable-input" id="editAppNumber-${item.id}" value="${item.appNumber || ''}"></td>
                             <td><span class="font-medium">${item.value}</span></td>
+                            <td><input type="text" class="editable-input" id="editSRO-${item.id}" value="${item.sro || ''}"></td>
                             <td>
-                                <select class="editable-input" id="editStatus-${index}">
+                                <select class="editable-input" id="editStatus-${item.id}">
                                     <option value="progress" ${item.status === 'progress' ? 'selected' : ''}>Progress</option>
                                     <option value="complete" ${item.status === 'complete' ? 'selected' : ''}>Complete</option>
                                     <option value="postponed" ${item.status === 'postponed' ? 'selected' : ''}>Postponed</option>
                                 </select>
                             </td>
-                            <td><input type="number" class="editable-input" id="editAmount-${index}" value="${parseFloat(item.amount || 0).toFixed(2)}" step="0.01"></td>
+                            <td>
+                                <select class="editable-input" id="editAssignee-${item.id}">
+                                    <option value="">-- Select Assignee --</option>
+                                    <option value="AJITHKUMAR" ${item.assignee === 'AJITHKUMAR' ? 'selected' : ''}>AJITHKUMAR</option>
+                                    <option value="ALAGES" ${item.assignee === 'ALAGES' ? 'selected' : ''}>ALAGES</option>
+                                    <option value="CHITRA" ${item.assignee === 'CHITRA' ? 'selected' : ''}>CHITRA</option>
+                                    <option value="SURYA" ${item.assignee === 'SURYA' ? 'selected' : ''}>SURYA</option>
+                                </select>
+                            </td>
+                            <td><input type="number" class="editable-input" id="editAmount-${item.id}" value="${parseFloat(item.amount || 0).toFixed(2)}" step="0.01"></td>
                             <td>${new Date(item.timestamp).toLocaleString()}</td>
-                            <td class="whitespace-nowrap">
-                                <button class="btn-save" data-action="save" data-index="${index}">Save</button>
+                            <td class="whitespace-nowrap flex flex-wrap gap-1">
+                                <button class="btn-save" data-action="save" data-id="${item.id}" data-index="${index}">Save</button>
                                 <button class="btn-cancel" data-action="cancel" data-index="${index}">Cancel</button>
                             </td>
                         `;
                     } else {
                         // Render in view mode
+                        let geminiButtonHtml = '';
+                        if (item.status === 'progress' || item.status === 'postponed') {
+                            geminiButtonHtml = `<button class="btn-gemini" data-action="suggest-steps" data-id="${item.id}" data-index="${index}">Suggest Steps ✨</button>`;
+                        } else if (item.status === 'complete') {
+                            geminiButtonHtml = `<button class="btn-gemini" data-action="draft-followup" data-id="${item.id}" data-index="${index}">Draft Follow-up ✨</button>`;
+                        }
+
                         row.innerHTML = `
-                            <td class="whitespace-nowrap">${item.name}</td>
                             <td class="whitespace-nowrap">${item.appNumber || '-'}</td>
                             <td class="whitespace-nowrap">${item.value}</td>
+                            <td class="whitespace-nowrap">${item.sro || '-'}</td>
                             <td class="whitespace-nowrap capitalize">${statusDisplayHtml}</td>
+                            <td class="whitespace-nowrap">${item.assignee || '-'}</td>
                             <td class="whitespace-nowrap">₹ ${parseFloat(item.amount || 0).toFixed(2)}</td>
                             <td class="whitespace-nowrap">${new Date(item.timestamp).toLocaleString()}</td>
-                            <td class="whitespace-nowrap">
-                                <button class="btn-edit" data-action="edit" data-index="${index}">Edit</button>
-                                <button class="btn-delete" data-action="delete" data-index="${index}">Delete</button>
+                            <td class="whitespace-nowrap flex flex-wrap gap-1">
+                                <button class="btn-edit" data-action="edit" data-id="${item.id}" data-index="${index}">Edit</button>
+                                <button class="btn-delete" data-action="delete" data-id="${item.id}">Delete</button>
+                                ${geminiButtonHtml}
                             </td>
                         `;
                     }
@@ -279,103 +550,147 @@
             totalAmountDisplay.textContent = `₹ ${totalAmount.toFixed(2)}`;
         }
 
-        // Function to save items to localStorage
-        function saveItems(items) {
-            localStorage.setItem('trackerItems', JSON.stringify(items));
-        }
-
         // Event listener for adding an item
-        addItemBtn.addEventListener('click', () => {
-            const name = itemNameInput.value.trim();
+        addItemBtn.addEventListener('click', async () => {
+            if (!isAuthReady || !currentUserId) {
+                console.warn("Cannot add item: Authentication not ready.");
+                showModal('Authentication Required', 'Please wait for authentication to complete before adding items.');
+                return;
+            }
+
             const appNumber = appNumberInput.value.trim();
             const value = itemValueInput.value.trim();
+            const sro = sroInput.value.trim();
             const status = itemStatusSelect.value;
+            const assignee = itemAssigneeSelect.value;
             const amount = parseFloat(itemAmountInput.value.trim());
 
-            if (name && value && !isNaN(amount)) {
-                const items = JSON.parse(localStorage.getItem('trackerItems')) || [];
-                const newItem = {
-                    name: name,
-                    appNumber: appNumber,
-                    value: value,
-                    status: status,
-                    amount: amount,
-                    timestamp: new Date().toISOString()
-                };
-                items.push(newItem);
-                saveItems(items);
-                loadItems();
+            if (appNumber && value && !isNaN(amount)) {
+                try {
+                    const newItem = {
+                        appNumber: appNumber,
+                        value: value,
+                        sro: sro,
+                        status: status,
+                        assignee: assignee,
+                        amount: amount,
+                        timestamp: new Date().toISOString()
+                    };
+                    await addDoc(collection(db, `artifacts/${appId}/users/${currentUserId}/trackerItems`), newItem);
 
-                itemNameInput.value = '';
-                appNumberInput.value = '';
-                itemValueInput.value = '';
-                itemStatusSelect.value = 'progress';
-                itemAmountInput.value = '';
+                    // Clear input fields after successful add
+                    appNumberInput.value = '';
+                    itemValueInput.value = '';
+                    sroInput.value = '';
+                    itemStatusSelect.value = 'progress';
+                    itemAssigneeSelect.value = '';
+                    itemAmountInput.value = '';
+                } catch (e) {
+                    console.error("Error adding document: ", e);
+                    showModal('Error', 'Failed to add item. Please try again.');
+                }
             } else {
-                console.log('Please fill in Item Name, Value/Description, and a valid Amount.');
+                showModal('Input Error', 'Please fill in Application Number, Value/Description, and a valid Amount.');
             }
         });
 
-        // Event listener for table actions (edit, save, cancel, delete) using event delegation
-        trackedItemsList.addEventListener('click', (event) => {
+        // Event listener for table actions (edit, save, cancel, delete, gemini features) using event delegation
+        trackedItemsList.addEventListener('click', async (event) => {
             const target = event.target;
             const action = target.dataset.action;
-            const index = parseInt(target.dataset.index);
+            const docId = target.dataset.id; // Get Firestore document ID
+            const index = parseInt(target.dataset.index); // Get array index for local editing state
+
+            if (!isAuthReady || !currentUserId) {
+                console.warn("Cannot perform action: Authentication not ready.");
+                showModal('Authentication Required', 'Please wait for authentication to complete before performing actions.');
+                return;
+            }
+
+            const item = trackerItemsData[index]; // Get item from the locally stored array
 
             if (action === 'delete') {
-                let items = JSON.parse(localStorage.getItem('trackerItems')) || [];
-                if (index >= 0 && index < items.length) {
-                    items.splice(index, 1);
-                    saveItems(items);
-                    editingIndex = -1; // Reset editing state
-                    loadItems();
+                if (docId) {
+                    try {
+                        await deleteDoc(doc(db, `artifacts/${appId}/users/${currentUserId}/trackerItems`, docId));
+                        editingIndex = -1; // Reset editing state
+                    } catch (e) {
+                        console.error("Error deleting document: ", e);
+                        showModal('Error', 'Failed to delete item. Please try again.');
+                    }
                 }
             } else if (action === 'edit') {
-                editingIndex = index;
-                loadItems(); // Re-render to show edit fields
+                editingIndex = index; // Set local editing index
+                renderItems(); // Re-render to show edit fields
             } else if (action === 'save') {
-                let items = JSON.parse(localStorage.getItem('trackerItems')) || [];
-                if (index >= 0 && index < items.length) {
-                    const editedAppNumber = document.getElementById(`editAppNumber-${index}`).value.trim();
-                    const editedStatus = document.getElementById(`editStatus-${index}`).value;
-                    const editedAmount = parseFloat(document.getElementById(`editAmount-${index}`).value.trim());
+                if (docId && item) {
+                    const editedAppNumber = document.getElementById(`editAppNumber-${docId}`).value.trim();
+                    const editedSRO = document.getElementById(`editSRO-${docId}`).value.trim();
+                    const editedStatus = document.getElementById(`editStatus-${docId}`).value;
+                    const editedAssignee = document.getElementById(`editAssignee-${docId}`).value;
+                    const editedAmount = parseFloat(document.getElementById(`editAmount-${docId}`).value.trim());
 
                     if (!isNaN(editedAmount)) {
-                        items[index].appNumber = editedAppNumber;
-                        items[index].status = editedStatus;
-                        items[index].amount = editedAmount;
-                        saveItems(items);
-                        editingIndex = -1; // Exit edit mode
-                        loadItems();
+                        try {
+                            await updateDoc(doc(db, `artifacts/${appId}/users/${currentUserId}/trackerItems`, docId), {
+                                appNumber: editedAppNumber,
+                                sro: editedSRO,
+                                status: editedStatus,
+                                assignee: editedAssignee,
+                                amount: editedAmount
+                            });
+                            editingIndex = -1; // Exit edit mode
+                        } catch (e) {
+                            console.error("Error updating document: ", e);
+                            showModal('Error', 'Failed to update item. Please try again.');
+                        }
                     } else {
-                        console.log('Please enter a valid amount.');
+                        showModal('Input Error', 'Please enter a valid amount.');
                     }
                 }
             } else if (action === 'cancel') {
                 editingIndex = -1; // Exit edit mode without saving
-                loadItems();
+                renderItems(); // Re-render to revert changes
+            } else if (action === 'suggest-steps' && item) {
+                const prompt = `Suggest next steps for the following EC/CC tracker item:
+                Application Number: ${item.appNumber || 'N/A'}
+                Value/Description: ${item.value}
+                SRO: ${item.sro || 'N/A'}
+                Current Status: ${item.status}.
+                Assigned to: ${item.assignee || 'N/A'}.
+                Please provide concise and actionable suggestions.`;
+                callGeminiAPI(prompt, `Suggested Steps for "${item.appNumber || item.value}"`);
+            } else if (action === 'draft-followup' && item) {
+                const prompt = `Draft a short, professional follow-up message for the following completed EC/CC tracker item:
+                Application Number: ${item.appNumber || 'N/A'}
+                Value/Description: ${item.value}
+                SRO: ${item.sro || 'N/A'}
+                Status: Complete.
+                Assigned to: ${item.assignee || 'N/A'}.
+                The message should be concise and suitable for a professional context, thanking relevant parties or confirming completion.`;
+                callGeminiAPI(prompt, `Draft Follow-up for "${item.appNumber || item.value}"`);
             }
         });
 
         // Function to download data as CSV (Excel compatible)
         downloadExcelBtn.addEventListener('click', () => {
-            const items = JSON.parse(localStorage.getItem('trackerItems')) || [];
-            if (items.length === 0) {
+            if (trackerItemsData.length === 0) {
                 console.log('No data to download.');
                 return;
             }
 
-            let csvContent = "Item Name,Application Number,Value/Description,Status,Amount (INR),Tracked On\n";
+            let csvContent = "Application Number,Value/Description,SRO,Status,Assignee,Amount (INR),Tracked On\n";
 
-            items.forEach(item => {
-                const name = `"${item.name.replace(/"/g, '""')}"`; // Escape double quotes
+            trackerItemsData.forEach(item => {
                 const appNumber = `"${(item.appNumber || '-').replace(/"/g, '""')}"`;
                 const value = `"${item.value.replace(/"/g, '""')}"`;
+                const sro = `"${(item.sro || '-').replace(/"/g, '""')}"`;
                 const status = `"${item.status.replace(/"/g, '""')}"`;
+                const assignee = `"${(item.assignee || '-').replace(/"/g, '""')}"`;
                 const amount = parseFloat(item.amount || 0).toFixed(2);
                 const timestamp = `"${new Date(item.timestamp).toLocaleString().replace(/"/g, '""')}"`;
 
-                csvContent += `${name},${appNumber},${value},${status},${amount},${timestamp}\n`;
+                csvContent += `${appNumber},${value},${sro},${status},${assignee},${amount},${timestamp}\n`;
             });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -383,7 +698,7 @@
             if (link.download !== undefined) { // Feature detection for download attribute
                 const url = URL.createObjectURL(blob);
                 link.setAttribute('href', url);
-                link.setAttribute('download', 'personal_tracker_data.csv');
+                link.setAttribute('download', 'ec_cc_tracker_data.csv');
                 link.style.visibility = 'hidden';
                 document.body.appendChild(link);
                 link.click();
@@ -394,9 +709,12 @@
             }
         });
 
-
-        // Initial load of items when the page loads
-        document.addEventListener('DOMContentLoaded', loadItems);
+        // Initial setup on DOMContentLoaded (now primarily for authentication)
+        // The data loading (renderItems) is triggered by onAuthStateChanged -> setupFirestoreListener
+        document.addEventListener('DOMContentLoaded', () => {
+            // The initial loading overlay is handled by the Firebase auth listener.
+            // No need to call loadItems() here directly, as it will be called by onSnapshot.
+        });
     </script>
 </body>
 </html>
