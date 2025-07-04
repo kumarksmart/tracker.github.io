@@ -1,1 +1,402 @@
-Hello World
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        .container {
+            max-width: 900px; /* Increased max-width for more columns */
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #4f46e5; /* Indigo 600 */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca; /* Indigo 700 */
+        }
+        .btn-delete {
+            background-color: #ef4444; /* Red 500 */
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .btn-delete:hover {
+            background-color: #dc2626; /* Red 600 */
+        }
+        .btn-edit, .btn-save, .btn-cancel, .btn-download {
+            background-color: #10b981; /* Green 500 */
+            color: white;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease-in-out;
+            margin-left: 0.25rem;
+        }
+        .btn-edit:hover {
+            background-color: #059669; /* Green 600 */
+        }
+        .btn-save {
+            background-color: #22c55e; /* Green 500 */
+        }
+        .btn-save:hover {
+            background-color: #16a34a; /* Green 600 */
+        }
+        .btn-cancel {
+            background-color: #6b7280; /* Gray 500 */
+        }
+        .btn-cancel:hover {
+            background-color: #4b5563; /* Gray 600 */
+        }
+        .btn-download {
+            background-color: #0ea5e9; /* Sky 500 */
+            margin-bottom: 1rem;
+        }
+        .btn-download:hover {
+            background-color: #0284c7; /* Sky 600 */
+        }
+        .input-field, .select-field {
+            padding: 0.75rem;
+            border: 1px solid #d1d5db; /* Gray 300 */
+            border-radius: 0.5rem;
+            width: 100%;
+            box-sizing: border-box; /* Ensures padding doesn't increase total width */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb; /* Gray 200 */
+        }
+        th {
+            background-color: #f9fafb; /* Gray 50 */
+            font-weight: 600;
+            color: #4b5563; /* Gray 700 */
+            text-transform: uppercase;
+            font-size: 0.875rem;
+        }
+        tr:hover {
+            background-color: #f3f4f6; /* Light gray on hover */
+        }
+        .editable-input {
+            width: 100%;
+            padding: 0.25rem;
+            border: 1px solid #ccc;
+            border-radius: 0.25rem;
+        }
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 1rem; /* 16px */
+            height: 1rem; /* 16px */
+            border-radius: 9999px; /* full rounded */
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        .status-complete {
+            background-color: #22c55e; /* Green 500 */
+        }
+        .status-progress {
+            background-color: #3b82f6; /* Blue 500 */
+        }
+        .status-postponed {
+            background-color: #ef4444; /* Red 500 */
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Personal Tracker</h1>
+
+        <!-- Input Form -->
+        <div class="mb-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Add New Item</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="itemName" class="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                    <input type="text" id="itemName" class="input-field focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Job Application">
+                </div>
+                <div>
+                    <label for="appNumber" class="block text-sm font-medium text-gray-700 mb-1">Application Number</label>
+                    <input type="text" id="appNumber" class="input-field focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., APP12345">
+                </div>
+                <div>
+                    <label for="itemValue" class="block text-sm font-medium text-gray-700 mb-1">Value/Description</label>
+                    <input type="text" id="itemValue" class="input-field focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Interview Scheduled">
+                </div>
+                <div>
+                    <label for="itemStatus" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="itemStatus" class="select-field focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="progress">Progress</option>
+                        <option value="complete">Complete</option>
+                        <option value="postponed">Postponed</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="itemAmount" class="block text-sm font-medium text-gray-700 mb-1">Amount (INR)</label>
+                    <input type="number" id="itemAmount" class="input-field focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., 5000" step="0.01">
+                </div>
+            </div>
+            <button id="addItemBtn" class="btn-primary mt-6 w-full md:w-auto">Add Item</button>
+        </div>
+
+        <!-- Tracked Items Display -->
+        <div>
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Your Tracked Items</h2>
+            <button id="downloadExcelBtn" class="btn-download">Download as Excel</button>
+            <div id="trackedItemsTableContainer" class="overflow-x-auto">
+                <table id="trackedItemsTable" class="min-w-full divide-y divide-gray-200 shadow-sm rounded-lg">
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>App. No.</th>
+                            <th>Value/Desc.</th>
+                            <th>Status</th>
+                            <th>Amount (INR)</th>
+                            <th>Tracked On</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trackedItemsList" class="bg-white divide-y divide-gray-200">
+                        <!-- Items will be loaded here by JavaScript -->
+                    </tbody>
+                </table>
+                <p id="noItemsMessage" class="text-gray-500 text-center py-8 hidden">No items tracked yet. Add some above!</p>
+            </div>
+            <div class="mt-6 p-4 bg-indigo-50 rounded-lg flex justify-between items-center">
+                <h3 class="text-lg font-bold text-indigo-800">Total Amount:</h3>
+                <span id="totalAmountDisplay" class="text-2xl font-extrabold text-indigo-900">₹ 0.00</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const itemNameInput = document.getElementById('itemName');
+        const appNumberInput = document.getElementById('appNumber');
+        const itemValueInput = document.getElementById('itemValue');
+        const itemStatusSelect = document.getElementById('itemStatus');
+        const itemAmountInput = document.getElementById('itemAmount');
+        const addItemBtn = document.getElementById('addItemBtn');
+        const trackedItemsList = document.getElementById('trackedItemsList'); // tbody of the table
+        const noItemsMessage = document.getElementById('noItemsMessage');
+        const trackedItemsTableContainer = document.getElementById('trackedItemsTableContainer');
+        const totalAmountDisplay = document.getElementById('totalAmountDisplay');
+        const downloadExcelBtn = document.getElementById('downloadExcelBtn');
+
+        let editingIndex = -1; // To keep track of which item is being edited
+
+        // Function to load items from localStorage and display them in the table
+        function loadItems() {
+            const items = JSON.parse(localStorage.getItem('trackerItems')) || [];
+            trackedItemsList.innerHTML = ''; // Clear current table body display
+            let totalAmount = 0;
+
+            if (items.length === 0) {
+                noItemsMessage.classList.remove('hidden'); // Show "No items" message
+                trackedItemsTableContainer.classList.add('hidden'); // Hide table if no items
+                downloadExcelBtn.classList.add('hidden'); // Hide download button if no items
+            } else {
+                noItemsMessage.classList.add('hidden'); // Hide "No items" message
+                trackedItemsTableContainer.classList.remove('hidden'); // Show table
+                downloadExcelBtn.classList.remove('hidden'); // Show download button
+
+                items.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.setAttribute('data-index', index); // Add data-index to the row
+
+                    let statusDisplayHtml = '';
+                    let statusText = item.status;
+                    if (item.status === 'complete') {
+                        statusDisplayHtml = `<span class="status-indicator status-complete"></span>Complete`;
+                    } else if (item.status === 'progress') {
+                        statusDisplayHtml = `<span class="status-indicator status-progress"></span>Progress`;
+                    } else if (item.status === 'postponed') {
+                        statusDisplayHtml = `<span class="status-indicator status-postponed"></span>Postponed`;
+                    }
+
+
+                    if (editingIndex === index) {
+                        // Render in edit mode
+                        row.innerHTML = `
+                            <td><span class="font-medium">${item.name}</span></td>
+                            <td><input type="text" class="editable-input" id="editAppNumber-${index}" value="${item.appNumber || ''}"></td>
+                            <td><span class="font-medium">${item.value}</span></td>
+                            <td>
+                                <select class="editable-input" id="editStatus-${index}">
+                                    <option value="progress" ${item.status === 'progress' ? 'selected' : ''}>Progress</option>
+                                    <option value="complete" ${item.status === 'complete' ? 'selected' : ''}>Complete</option>
+                                    <option value="postponed" ${item.status === 'postponed' ? 'selected' : ''}>Postponed</option>
+                                </select>
+                            </td>
+                            <td><input type="number" class="editable-input" id="editAmount-${index}" value="${parseFloat(item.amount || 0).toFixed(2)}" step="0.01"></td>
+                            <td>${new Date(item.timestamp).toLocaleString()}</td>
+                            <td class="whitespace-nowrap">
+                                <button class="btn-save" data-action="save" data-index="${index}">Save</button>
+                                <button class="btn-cancel" data-action="cancel" data-index="${index}">Cancel</button>
+                            </td>
+                        `;
+                    } else {
+                        // Render in view mode
+                        row.innerHTML = `
+                            <td class="whitespace-nowrap">${item.name}</td>
+                            <td class="whitespace-nowrap">${item.appNumber || '-'}</td>
+                            <td class="whitespace-nowrap">${item.value}</td>
+                            <td class="whitespace-nowrap capitalize">${statusDisplayHtml}</td>
+                            <td class="whitespace-nowrap">₹ ${parseFloat(item.amount || 0).toFixed(2)}</td>
+                            <td class="whitespace-nowrap">${new Date(item.timestamp).toLocaleString()}</td>
+                            <td class="whitespace-nowrap">
+                                <button class="btn-edit" data-action="edit" data-index="${index}">Edit</button>
+                                <button class="btn-delete" data-action="delete" data-index="${index}">Delete</button>
+                            </td>
+                        `;
+                    }
+                    trackedItemsList.appendChild(row);
+
+                    totalAmount += parseFloat(item.amount || 0);
+                });
+            }
+            totalAmountDisplay.textContent = `₹ ${totalAmount.toFixed(2)}`;
+        }
+
+        // Function to save items to localStorage
+        function saveItems(items) {
+            localStorage.setItem('trackerItems', JSON.stringify(items));
+        }
+
+        // Event listener for adding an item
+        addItemBtn.addEventListener('click', () => {
+            const name = itemNameInput.value.trim();
+            const appNumber = appNumberInput.value.trim();
+            const value = itemValueInput.value.trim();
+            const status = itemStatusSelect.value;
+            const amount = parseFloat(itemAmountInput.value.trim());
+
+            if (name && value && !isNaN(amount)) {
+                const items = JSON.parse(localStorage.getItem('trackerItems')) || [];
+                const newItem = {
+                    name: name,
+                    appNumber: appNumber,
+                    value: value,
+                    status: status,
+                    amount: amount,
+                    timestamp: new Date().toISOString()
+                };
+                items.push(newItem);
+                saveItems(items);
+                loadItems();
+
+                itemNameInput.value = '';
+                appNumberInput.value = '';
+                itemValueInput.value = '';
+                itemStatusSelect.value = 'progress';
+                itemAmountInput.value = '';
+            } else {
+                console.log('Please fill in Item Name, Value/Description, and a valid Amount.');
+            }
+        });
+
+        // Event listener for table actions (edit, save, cancel, delete) using event delegation
+        trackedItemsList.addEventListener('click', (event) => {
+            const target = event.target;
+            const action = target.dataset.action;
+            const index = parseInt(target.dataset.index);
+
+            if (action === 'delete') {
+                let items = JSON.parse(localStorage.getItem('trackerItems')) || [];
+                if (index >= 0 && index < items.length) {
+                    items.splice(index, 1);
+                    saveItems(items);
+                    editingIndex = -1; // Reset editing state
+                    loadItems();
+                }
+            } else if (action === 'edit') {
+                editingIndex = index;
+                loadItems(); // Re-render to show edit fields
+            } else if (action === 'save') {
+                let items = JSON.parse(localStorage.getItem('trackerItems')) || [];
+                if (index >= 0 && index < items.length) {
+                    const editedAppNumber = document.getElementById(`editAppNumber-${index}`).value.trim();
+                    const editedStatus = document.getElementById(`editStatus-${index}`).value;
+                    const editedAmount = parseFloat(document.getElementById(`editAmount-${index}`).value.trim());
+
+                    if (!isNaN(editedAmount)) {
+                        items[index].appNumber = editedAppNumber;
+                        items[index].status = editedStatus;
+                        items[index].amount = editedAmount;
+                        saveItems(items);
+                        editingIndex = -1; // Exit edit mode
+                        loadItems();
+                    } else {
+                        console.log('Please enter a valid amount.');
+                    }
+                }
+            } else if (action === 'cancel') {
+                editingIndex = -1; // Exit edit mode without saving
+                loadItems();
+            }
+        });
+
+        // Function to download data as CSV (Excel compatible)
+        downloadExcelBtn.addEventListener('click', () => {
+            const items = JSON.parse(localStorage.getItem('trackerItems')) || [];
+            if (items.length === 0) {
+                console.log('No data to download.');
+                return;
+            }
+
+            let csvContent = "Item Name,Application Number,Value/Description,Status,Amount (INR),Tracked On\n";
+
+            items.forEach(item => {
+                const name = `"${item.name.replace(/"/g, '""')}"`; // Escape double quotes
+                const appNumber = `"${(item.appNumber || '-').replace(/"/g, '""')}"`;
+                const value = `"${item.value.replace(/"/g, '""')}"`;
+                const status = `"${item.status.replace(/"/g, '""')}"`;
+                const amount = parseFloat(item.amount || 0).toFixed(2);
+                const timestamp = `"${new Date(item.timestamp).toLocaleString().replace(/"/g, '""')}"`;
+
+                csvContent += `${name},${appNumber},${value},${status},${amount},${timestamp}\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            if (link.download !== undefined) { // Feature detection for download attribute
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'personal_tracker_data.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else {
+                console.log('Download not supported on this browser.');
+            }
+        });
+
+
+        // Initial load of items when the page loads
+        document.addEventListener('DOMContentLoaded', loadItems);
+    </script>
+</body>
+</html>
